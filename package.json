@@ -1,0 +1,24 @@
+{
+  "name": "glide-config",
+  "private": true,
+  "author": {
+    "name": "Tomer Aberbach",
+    "email": "tomer@aberba.ch",
+    "url": "https://tomeraberba.ch"
+  },
+  "scripts": {
+    "format": "prettier --cache --write .",
+    "lint": "eslint --cache --cache-location node_modules/.cache/eslint/ --fix .",
+    "typecheck": "tsc"
+  },
+  "prettier": "@tomer/prettier-config",
+  "dependencies": {
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@tomer/eslint-config": "^4.4.1",
+    "@tomer/prettier-config": "^4.0.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.7.4"
+  }
+}
