@@ -1,5 +1,5 @@
 /* ======================================================
-                Glide version: 0.1.56a
+                Glide version: 0.1.57a
    ====================================================== */
 
 declare const GLIDE_EXCOMMANDS: [
@@ -200,6 +200,32 @@ declare const GLIDE_EXCOMMANDS: [
 		readonly description: "Switch to the previous tab, wrapping around if applicable";
 		readonly content: false;
 		readonly repeatable: true;
+	},
+	{
+		readonly name: "tab_pin";
+		readonly description: "Pin the current tab, or the tab with the given ID";
+		readonly content: false;
+		readonly args_schema: {
+			readonly tab_id: {
+				readonly type: "integer";
+				readonly required: false;
+				readonly position: 0;
+			};
+		};
+		readonly repeatable: false;
+	},
+	{
+		readonly name: "tab_unpin";
+		readonly description: "Unpin the current tab, or the tab with the given ID";
+		readonly content: false;
+		readonly args_schema: {
+			readonly tab_id: {
+				readonly type: "integer";
+				readonly required: false;
+				readonly position: 0;
+			};
+		};
+		readonly repeatable: false;
 	},
 	{
 		readonly name: "commandline_show";
@@ -630,6 +656,9 @@ declare global {
 			 * const proc = await glide.process.spawn('kitty', ['nvim', 'glide.ts'], { cwd: '~/.dotfiles/glide' });
 			 * console.log('opened kitty with pid', proc.pid);
 			 * ```
+			 *
+			 * **note**: on macOS, the `PATH` environment variable is likely not set to what you'd expect, as applications do not inherit your shell environment.
+			 *           you can update it with `glide.env.set("PATH", "/usr/bin:/usr/.local/bin")`.
 			 */
 			spawn(command: string, args?: string[] | null | undefined, opts?: glide.SpawnOptions): Promise<glide.Process>;
 			/**
@@ -744,6 +773,7 @@ declare global {
 			 */
 			add(styles: string, opts?: {
 				id: string;
+				overwrite?: boolean;
 			}): void;
 			/**
 			 * Remove custom CSS that has previously been added.
@@ -765,6 +795,10 @@ declare global {
 			 * Returns whether or not custom CSS has been registered with the given `id`.
 			 */
 			has(id: string): boolean;
+			/**
+			 * Returns the CSS string for the given `id`, or `undefined` if no styles have been registered with that ID.
+			 */
+			get(id: string): string | undefined;
 		};
 		prefs: {
 			/**
@@ -895,6 +929,12 @@ declare global {
 			fn<F extends (...args: any[]) => any>(wrapped: F): glide.ContentFunction<F>;
 			/**
 			 * Execute a function in the content process for the given tab.
+			 *
+			 * ```ts
+			 * await glide.content.execute(() => {
+			 *  document.body!.appendChild(DOM.create_element("p", ["this will show up at the bottom of the page!"]));
+			 * }, { tab_id: await glide.tabs.active() });
+			 * ```
 			 *
 			 * The given function will be stringified before being sent across processes, which
 			 * means it **cannot** capture any outside variables.
@@ -1108,6 +1148,33 @@ declare global {
 			 * ```
 			 */
 			list(types?: glide.AddonType | glide.AddonType[]): Promise<glide.Addon[]>;
+		};
+		search_engines: {
+			/**
+			 * Adds or updates a custom search engine.
+			 *
+			 * The format matches `chrome_settings_overrides.search_provider`[0] from WebExtension manifests.
+			 *
+			 * The `search_url` must contain `{searchTerms}` as a placeholder for the search query.
+			 *
+			 * ```typescript
+			 * glide.search_engines.add({
+			 *   name: "Discogs",
+			 *   keyword: "disc",
+			 *   search_url: "https://www.discogs.com/search/?q={searchTerms}",
+			 *   favicon_url: "https://www.discogs.com/favicon.ico",
+			 * });
+			 * ```
+			 *
+			 * **note**: search engines you add are not removed when this call is removed, you will need to manually remove them
+			 *            using `about:preferences#search` for now.
+			 *
+			 * **note**: not all properties in the `chrome_settings_overrides.search_provider` manifest are supported, as they are not all
+			 *           supported by Firefox, e.g. `instant_url`, and `image_url`.
+			 *
+			 * [0]: https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/manifest.json/chrome_settings_overrides#search_provider
+			 */
+			add(props: Browser.Manifest.WebExtensionManifestChromeSettingsOverridesSearchProviderType): Promise<void>;
 		};
 		keys: {
 			/**
@@ -1469,7 +1536,7 @@ declare global {
 		 *
 		 * For example:
 		 * ```typescript
-		 * glide.o.hint_label_generator = ({ hints }) => Array.from({ length: hints.length }).map((_, i) => String(i));
+		 * glide.o.hint_label_generator = ({ hints }) => Array.from({ length: hints.length }, (_, i) => String(i));
 		 * ```
 		 *
 		 * Or using data from the hinted elements through `content.execute()`:
@@ -1761,7 +1828,7 @@ declare global {
 			args_arr: string[];
 		};
 		/// @docs-skip
-		export type ExcmdString =
+		export type ExcmdString = 
 		// builtin
 		GlideCommandString
 		// custom
@@ -2086,7 +2153,7 @@ declare global {
 		 * });
 		 * ```
 		 */
-		create_element<TagName extends keyof HTMLElementTagNameMap | (string & {})>(tag_name: TagName, props_or_children?:
+		create_element<TagName extends keyof HTMLElementTagNameMap | (string & {})>(tag_name: TagName, props_or_children?: 
 		// props
 		DOM.CreateElementProps<TagName extends keyof HTMLElementTagNameMap ? TagName : "div">
 		// children

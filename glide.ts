@@ -30,6 +30,14 @@ glide.env.set(
   `PATH`,
   `/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin`,
 )
+
+void glide.search_engines.add({
+  name: `Discogs`,
+  keyword: `disc`,
+  search_url: `https://www.discogs.com/search/?q={searchTerms}`,
+  favicon_url: `https://www.discogs.com/favicon.ico`,
+})
+
 glide.excmds.create(
   {
     name: `pass`,
