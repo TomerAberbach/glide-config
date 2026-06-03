@@ -28,7 +28,7 @@ glide.autocmds.create(`UrlEnter`, { hostname: `mail.google.com` }, () => {
 
 glide.env.set(
   `PATH`,
-  `/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin`,
+  `/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/local/bin:/etc/profiles/per-user/tomer/bin`,
 )
 
 void glide.search_engines.add({
